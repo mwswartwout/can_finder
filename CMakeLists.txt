@@ -127,8 +127,7 @@ include_directories(
 # add_dependencies(can_finder ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(autonomous_find_plane_pcd_file src/autonomous_find_plane_pcd_file.cpp
-        ${pcl_utils_SOURCE_DIR}/src/find_indices_of_plane_from_patch.cpp)
+add_executable(autonomous_find_plane_pcd_file src/autonomous_find_plane_pcd_file.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
