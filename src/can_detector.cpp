@@ -46,22 +46,39 @@ int main(int argc, char** argv) {
     Eigen::Affine3f A_sensor_wrt_torso;
     A_sensor_wrt_torso = utils.transformTFToEigen(tf_sensor_frame_to_torso_frame);
     //transform the kinect data to the torso frame;
-    // we don't need to have it returned; cwru_pcl_utils can own it as a member var
+    // we don't need to have it returned; pcl_utils can own it as a member var
     utils.transform_kinect_cloud(A_sensor_wrt_torso);
-    std::vector<int> indices;
+
+    // Save transformed kinect data into PointCloud object that we can manipulate
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_transformed_cloud;
     utils.get_kinect_transformed_points(kinect_transformed_cloud);
+
+    // Filter the kinect cloud to just contain points that could feasibly be a part of the can
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(kinect_transformed_cloud); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
-    pass.setFilterLimits(TABLE_HEIGHT - HEIGHT_ERR, CAN_HEIGHT + HEIGHT_ERR); //here is the range: z value near zero, -0.02<z<0.02
+    pass.setFilterLimits(TABLE_HEIGHT - HEIGHT_ERR, CAN_HEIGHT + HEIGHT_ERR); //here is the range of z values
+    std::vector<int> indices;
     pass.filter(indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
+
+    // Create can cloud just with
     double num_points = indices.size();
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr can_cloud
     for (int i = 0; i < indices.size(); i++) {
         can_cloud.points[i] = kinect_transformed_cloud.points[indices[i]];
     }
-//TODO add publisher to publish the can cloud so we can view it in RViz and verify that this is working correctly
+
+    ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("can", 1);
+    sensor_msgs::PointCloud2 ros_can_cloud;
+    pcl::toROSMsg(*can_cloud, ros_can_cloud);
+    while (ros::ok()) {
+        pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
+        ros::spinOnce();
+        ros::Duration(0.1).sleep();
+    }
+
+    return 0;
+
 //TODO add logic to analyze can_cloud based on # of points and color and determine whether or not a can is present
 //TODO turn this into a library so that it can be used by another class
 }
