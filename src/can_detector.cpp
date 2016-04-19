@@ -61,5 +61,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < indices.size(); i++) {
         can_cloud.points[i] = kinect_transformed_cloud.points[indices[i]];
     }
-#TODO add publisher to publish the can cloud so we can view it in RViz and verify that this is working correctly
+//TODO add publisher to publish the can cloud so we can view it in RViz and verify that this is working correctly
+//TODO add logic to analyze can_cloud based on # of points and color and determine whether or not a can is present
+//TODO turn this into a library so that it can be used by another class
 }
