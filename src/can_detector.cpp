@@ -10,18 +10,7 @@
 #define HEIGHT_ERR 0
 #define MIN_CLOUD_SIZE 100
 
-int main(int argc, char** argv) {
-    ros::init(argc, argv, "can_detector"); //node name
-    ros::NodeHandle nh;
-
-    PclUtils utils;
-    while (!utils.got_kinect_cloud()) {
-        ROS_INFO("did not receive pointcloud");
-        ros::spinOnce();
-        ros::Duration(1.0).sleep();
-    }
-    ROS_INFO("got a pointcloud");
-
+tf::StampedTransform wait_for_transform() {
     tf::StampedTransform tf_sensor_frame_to_torso_frame; //use this to transform sensor frame to torso frame
     tf::TransformListener tf_listener; //start a transform listener
 
@@ -43,6 +32,10 @@ int main(int argc, char** argv) {
         }
     }
     ROS_INFO("tf is good"); //tf-listener found a complete chain from sensor to world; ready to roll
+    return tf_sensor_frame_to_torso_frame;
+}
+
+bool detect_can(PclUtils& utils, tf::StampedTransform tf_sensor_frame_to_torso_frame) {
     //convert the tf to an Eigen::Affine:
     Eigen::Affine3f A_sensor_wrt_torso;
     A_sensor_wrt_torso = utils.transformTFToEigen(tf_sensor_frame_to_torso_frame);
@@ -70,24 +63,38 @@ int main(int argc, char** argv) {
     }
     // TODO Could add color filtering in addition to spatial
 
-    ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("can", 1);
+    ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("can", 1, latch=true);
     sensor_msgs::PointCloud2 ros_can_cloud;
     pcl::toROSMsg(*can_cloud, ros_can_cloud);
+    pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
+    ros::spinOnce();
 
     if (can_cloud.points.size() > MIN_CLOUD_SIZE) {
         ROS_INFO("Can detected at this position");
+        return true;
     }
     else {
         ROS_INFO("No can is present");
+        return false;
     }
 
-    while (ros::ok()) {
-        pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
+}
+
+int main(int argc, char** argv) {
+    ros::init(argc, argv, "can_detector"); //node name
+    ros::NodeHandle nh;
+
+    PclUtils utils;
+    while (!utils.got_kinect_cloud()) {
+        ROS_INFO("did not receive pointcloud");
         ros::spinOnce();
-        ros::Duration(0.1).sleep();
+        ros::Duration(1.0).sleep();
     }
+    ROS_INFO("got a pointcloud");
+
+    tf::StampedTransform tf_sensor_frame_to_torso_frame = wait_for_transform();
+
+    bool found = detect_can(utils, tf_sensor_frame_to_torso_frame);
 
     return 0;
-
-//TODO turn this into a library so that it can be used by another class
 }
