@@ -5,9 +5,10 @@
 #include <ros/ros.h>
 #include "can_finder/can_detector.h"
 
-#define TABLE_HEIGHT 1
-#define CAN_HEIGHT 1
-#define HEIGHT_ERR 0
+#define TABLE_HEIGHT .82
+#define CAN_HEIGHT .95
+#define TABLE_HEIGHT_ERR 0.1
+#define CAN_HEIGHT_ERR 0.05
 #define MIN_CLOUD_SIZE 100
 
 tf::StampedTransform wait_for_transform() {
@@ -51,7 +52,7 @@ bool detect_can(PclUtils& utils, tf::StampedTransform tf_sensor_frame_to_torso_f
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(kinect_transformed_cloud); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
-    pass.setFilterLimits(TABLE_HEIGHT - HEIGHT_ERR, CAN_HEIGHT + HEIGHT_ERR); //here is the range of z values
+    pass.setFilterLimits(TABLE_HEIGHT - TABLE_HEIGHT_ERR, CAN_HEIGHT + CAN_HEIGHT_ERR); //here is the range of z values
     std::vector<int> indices;
     pass.filter(indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
