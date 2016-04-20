@@ -8,6 +8,7 @@
 #define TABLE_HEIGHT 1
 #define CAN_HEIGHT 1
 #define HEIGHT_ERR 0
+#define MIN_CLOUD_SIZE 100
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "can_detector"); //node name
@@ -67,10 +68,19 @@ int main(int argc, char** argv) {
     for (int i = 0; i < indices.size(); i++) {
         can_cloud.points[i] = kinect_transformed_cloud.points[indices[i]];
     }
+    // TODO Could add color filtering in addition to spatial
 
     ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("can", 1);
     sensor_msgs::PointCloud2 ros_can_cloud;
     pcl::toROSMsg(*can_cloud, ros_can_cloud);
+
+    if (can_cloud.points.size() > MIN_CLOUD_SIZE) {
+        ROS_INFO("Can detected at this position");
+    }
+    else {
+        ROS_INFO("No can is present");
+    }
+
     while (ros::ok()) {
         pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
         ros::spinOnce();
@@ -79,6 +89,5 @@ int main(int argc, char** argv) {
 
     return 0;
 
-//TODO add logic to analyze can_cloud based on # of points and color and determine whether or not a can is present
 //TODO turn this into a library so that it can be used by another class
 }
