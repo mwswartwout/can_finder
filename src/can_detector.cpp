@@ -45,7 +45,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     //transform the kinect data to the torso frame;
     // we don't need to have it returned; pcl_utils can own it as a member var
     ROS_INFO("Transforming kinect cloud");
-    utils.transform_kinect_cloud(A_sensor_wrt_torso);
+    utils.transform_kinect_clr_cloud(A_sensor_wrt_torso);
 
     // Save transformed kinect data into PointCloud object that we can manipulate
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_transformed_cloud;
