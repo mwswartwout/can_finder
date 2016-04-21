@@ -44,10 +44,12 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     A_sensor_wrt_torso = utils.transformTFToEigen(tf_sensor_frame_to_torso_frame);
     //transform the kinect data to the torso frame;
     // we don't need to have it returned; pcl_utils can own it as a member var
+    ROS_INFO("Transforming kinect cloud");
     utils.transform_kinect_cloud(A_sensor_wrt_torso);
 
     // Save transformed kinect data into PointCloud object that we can manipulate
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_transformed_cloud;
+    ROS_INFO("Getting transformed kinect cloud");
     utils.get_kinect_transformed_points(kinect_transformed_cloud);
 
     // Filter the kinect cloud to just contain points that could feasibly be a part of the can
@@ -56,6 +58,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
     pass.setFilterLimits(TABLE_HEIGHT - TABLE_HEIGHT_ERR, CAN_HEIGHT + CAN_HEIGHT_ERR); //here is the range of z values
     std::vector<int> indices;
+    ROS_INFO("Filtering cloud by z height");
     pass.filter(indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
     // Create can cloud just with points that are the can
