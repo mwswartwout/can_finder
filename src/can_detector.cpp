@@ -48,7 +48,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     utils.transform_kinect_clr_cloud(A_sensor_wrt_torso);
 
     // Save transformed kinect data into PointCloud object that we can manipulate
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_transformed_cloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_transformed_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     ROS_INFO("Getting transformed kinect cloud");
     utils.get_kinect_transformed_points(kinect_transformed_cloud);
 
@@ -62,7 +62,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     pass.filter(indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
     // Create can cloud just with points that are the can
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr can_cloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr can_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     for (int i = 0; i < indices.size(); i++) {
         can_cloud->points[i] = kinect_transformed_cloud->points[indices[i]];
     }
