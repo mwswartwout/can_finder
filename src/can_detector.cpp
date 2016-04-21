@@ -60,7 +60,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     std::vector<int> indices;
     ROS_INFO("Filtering cloud by z height");
     pass.filter(indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
-
+    ROS_INFO_STREAM( indices.size() << " indices passed by z filter.");
     // Create can cloud just with points that are the can
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr can_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     for (int i = 0; i < indices.size(); i++) {
@@ -74,15 +74,25 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
     ros::spinOnce();
 
+    bool found;
     if (can_cloud->points.size() > MIN_CLOUD_SIZE) {
         ROS_INFO("Can detected at this position");
-        return true;
+        ROS_INFO_STREAM("Can cloud has size " << can_cloud->points.size());
+        found = true;
     }
     else {
         ROS_INFO("No can is present");
-        return false;
+        ROS_INFO_STREAM("Can cloud has size " << can_cloud->points.size());
+        found = false;
     }
 
+    while (ros::ok) {
+        pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
+        ros::spinOnce();
+        ros::Duration(0.1).sleep();
+    }
+
+    return found;
 }
 
 int main(int argc, char** argv) {
