@@ -132,6 +132,7 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(autonomous_find_plane_pcd_file src/autonomous_find_plane_pcd_file.cpp)
+add_executable(can_detector src/can_detector.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -142,6 +143,8 @@ target_link_libraries(autonomous_find_plane_pcd_file
   ${catkin_LIBRARIES}
     pcl_utils
 )
+
+target_link_libraries(can_detector ${catkin_LIBRARIES})
 
 #############
 ## Install ##
