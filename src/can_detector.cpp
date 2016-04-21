@@ -74,15 +74,25 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
     ros::spinOnce();
 
+    bool found;
     if (can_cloud->points.size() > MIN_CLOUD_SIZE) {
         ROS_INFO("Can detected at this position");
-        return true;
+        ROS_INFO_STREAM("Can cloud has size " << can_cloud->points.size());
+        found = true;
     }
     else {
         ROS_INFO("No can is present");
-        return false;
+        ROS_INFO_STREAM("Can cloud has size " << can_cloud->points.size());
+        found = false;
     }
 
+    while (ros::ok) {
+        pubCloud.publish(ros_can_cloud); // will not need to keep republishing if display setting is persistent
+        ros::spinOnce();
+        ros::Duration(0.1).sleep();
+    }
+
+    return found;
 }
 
 int main(int argc, char** argv) {
