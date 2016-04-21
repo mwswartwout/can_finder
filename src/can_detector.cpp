@@ -6,12 +6,17 @@
 #include <tf/tf.h>
 #include <pcl_utils/pcl_utils.h>
 #include <pcl/filters/passthrough.h>
+#include <math.h>
 
 #define TABLE_HEIGHT .82
 #define CAN_HEIGHT .95
 #define TABLE_HEIGHT_ERR 0.1
 #define CAN_HEIGHT_ERR 0.05
 #define MIN_CLOUD_SIZE 100
+#define RED 100
+#define GREEN 100
+#define BLUE 100
+#define COLOR_ERR 1
 
 tf::StampedTransform wait_for_transform() {
     tf::StampedTransform tf_sensor_frame_to_torso_frame; //use this to transform sensor frame to torso frame
@@ -52,7 +57,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     ROS_INFO("Getting transformed kinect cloud");
     utils.get_kinect_transformed_points(kinect_transformed_cloud);
 
-    // Filter the kinect cloud to just contain points that could feasibly be a part of the can
+    // Filter the kinect cloud to just contain points that could feasibly be a part of the can based on height
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(kinect_transformed_cloud); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
@@ -66,10 +71,15 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     can_cloud->points.resize(indices.size());
     can_cloud->header.frame_id = "base_link";
 
+    // Now add points that passed the height filter into the can_cloud
+    // But only add them if they are approximately red in color
+    Eigen::Vector3i color;
     for (int i = 0; i < indices.size(); i++) {
-        can_cloud->points[i] = kinect_transformed_cloud->points[indices[i]];
+        color = kinect_transformed_cloud->points[indices[i]].getRGBVector3i();
+        if (abs(color(0) - RED) < COLOR_ERR && abs(color(1) - GREEN) < COLOR_ERR && abs(color(2) - BLUE) < COLOR_ERR) {
+            can_cloud->points[i] = kinect_transformed_cloud->points[indices[i]];
+        }
     }
-    // TODO Could add color filtering in addition to spatial
 
     ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("can", 1, true);
     sensor_msgs::PointCloud2 ros_can_cloud;
