@@ -63,6 +63,7 @@ bool detect_can(ros::NodeHandle& nh, PclUtils& utils, tf::StampedTransform tf_se
     ROS_INFO_STREAM( indices.size() << " indices passed by z filter.");
     // Create can cloud just with points that are the can
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr can_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    can_cloud->points.resize(indices.size());
     for (int i = 0; i < indices.size(); i++) {
         can_cloud->points[i] = kinect_transformed_cloud->points[indices[i]];
     }
